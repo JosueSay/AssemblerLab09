@@ -84,12 +84,14 @@
 	;=====================================
 	;|| Variables formato para imprimir ||
 	;=====================================
+	espacio BYTE " ",0Ah,0
+	encabezado BYTE "LOS DATOS GENERALES SON:",0Ah,0																					
 	mencion1 BYTE "Ingresa el monto para el mes '%s': ",0
 	contMonto BYTE "%d", 0
 	identificacion_datos BYTE "||      MES      ||Cliente        ||NIT       ||MONTO     ||IVA       ||", 0Ah, 0
 	formato_datos_empresa BYTE "||%-15s||%-15s||%-10s||%-10d||%-10d||", 0Ah, 0
 	formato_monto BYTE "El monto anual es '%d'.",0Ah, 0
-	aviso1 BYTE "AVISO: Actualizar su régimen tributario a 'IVA General'.",0Ah, 0
+	aviso1 BYTE "AVISO: Actualizar su regimen tributario a 'IVA General'.",0Ah, 0
 	aviso2 BYTE "AVISO: Para el siguiente periodo fiscal, la empresa puede continuar como 'pequenio contribuyente'.",0Ah, 0
 
 ;==========
@@ -114,56 +116,60 @@ main proc
 	mov esi, 0
 	; Bucle para pedir datos
 	lectura_datos:
-		mov ebx, meses[esi*4]          ; Obtener el mes
-		push ebx
-		push offset mencion1
-		call printf                    ; Imprimir el mes
-		add esp, 8                      ; Limpiar el stack
-
-		lea eax, monto_facturado[esi*4] ; Lugar donde se guarda monto_facturado
-		push eax
-		push offset contMonto           ; Ingreso de monto
-		call scanf
-		add esp, 8                      ; Limpiar el stack
-
-		inc esi                         ; Incrementar contador de mes
-		cmp esi, n_facturas             ; Comparar con la cantidad de facturas
-		jl lectura_datos                ; Si es menor, volver a pedir datos
+		mov ebx, meses[esi*4]          				; Obtener el mes
+		push ebx			
+		push offset mencion1			
+		call printf                    				; Imprimir el mes
+		add esp, 8                      			; Limpiar el stack
+			
+		lea eax, monto_facturado[esi*4] 			; Lugar donde se guarda monto_facturado
+		push eax			
+		push offset contMonto           			; Ingreso de monto
+		call scanf			
+		add esp, 8                      			; Limpiar el stack
+			
+		inc esi                         			; Incrementar contador de mes
+		cmp esi, n_facturas             			; Comparar con la cantidad de facturas
+		jl lectura_datos                			; Si es menor, volver a pedir datos
 
 	; =======================================
 	; ||CODIGO PARA CALCULAR EL MONTO ANUAL||
 	; =======================================
-	mov esi, OFFSET monto_facturado     ; Monto facturado
-	mov ecx, n_facturas                 ; Numero de elementos en la lista
-
-	; Bucle para realizar el calculo
-	bucle_monto_anual:
-		mov eax, [esi]                  ; Se obtiene el valor de monto_factura
-		add monto_anual, eax            ; Se suma el valor del monto anual con los valores de monto_factura
-		add esi, 4                      ; Se avanza a la siguiente posición de monto_facturado
-		dec ecx                         ; Reducir el valor del registro ecx hasta cero
-		jnz bucle_monto_anual           ; Si ecx no es cero, continuar con el bucle
+	mov esi, OFFSET monto_facturado     			; Monto facturado
+	mov ecx, n_facturas                 			; Numero de elementos en la lista
+	; Bucle para obtener el monto anual			
+	bucle_monto_anual:			
+		mov eax, [esi]                  			; Se obtiene el valor de monto_factura
+		add monto_anual, eax            			; Se suma el valor del monto anual con los valores de monto_factura
+		add esi, 4                      			
+		dec ecx                         			
+		jnz bucle_monto_anual           			; Si ecx no es cero, continuar con el bucle
 
 	; ========================================
 	; ||CODIGO PARA CALCULAR EL IVA POR MES||
 	; ========================================
-	mov esi, 0                          ; Inicializar contador de meses
-	mov ecx, n_facturas                 ; Numero de elementos en la lista
-
+	mov esi, 0                          			; Inicializar contador de meses
+	mov ecx, n_facturas                 			; Numero de elementos en la lista
 	; Bucle para realizar el calculo
 	bucle_iva:
-		mov eax, [monto_facturado + esi*4]           ; Obtener el valor de monto_facturado
-		imul eax, porcentaje_iva                     ; Multiplicar el valor de monto_facturado por 5
-		cdq                                          ; Limpiar edx (se utiliza antes de la división)
-		idiv divisor_iva                             ; Dividir el resultado anterior entre divisor_iva
-		mov [iva_calculado + esi*4], eax             ; Guardar el resultado en iva_calculado
-		inc esi                                      ; Incrementar el contador de meses
-		loop bucle_iva                               ; Continuar el bucle hasta que ecx llegue a cero
+		mov eax, [monto_facturado + esi*4]          ; Obtener el valor de monto_facturado
+		imul eax, porcentaje_iva                    
+		cdq                                         ; Limpiar edx
+		idiv divisor_iva                            
+		mov [iva_calculado + esi*4], eax           	
+		inc esi                                     ; Incrementar el contador de meses
+		loop bucle_iva                              ; Continuar el bucle hasta que ecx llegue a cero
 
 	; =============================
 	; ||CODIGO IMPRIMIR LOS DATOS||
 	; =============================
 	;|| ENCABEZADO ||
+	push OFFSET espacio
+	call printf
+	add esp, 4
+	push OFFSET encabezado
+	call printf
+	add esp, 4
 	push OFFSET identificacion_datos
 	call printf
 	add esp, 4
@@ -171,11 +177,11 @@ main proc
 	;|| DATOS GENERALES ||
 	mov esi, 0
 	imprimir_datos:
-		mov eax, [meses + esi*4]              ; Cargar mes
-		mov ebx, [clientes + esi*4]           ; Cargar cliente
-		mov ecx, [nits + esi*4]               ; Cargar nit
-		mov edx, [monto_facturado + esi*4]    ; Cargar monto
-		mov edi, [iva_calculado + esi*4]      ; Cargar iva
+		mov eax, [meses + esi*4]              		; Cargar mes
+		mov ebx, [clientes + esi*4]           		; Cargar cliente
+		mov ecx, [nits + esi*4]               		; Cargar nit
+		mov edx, [monto_facturado + esi*4]    		; Cargar monto
+		mov edi, [iva_calculado + esi*4]      		; Cargar iva
 		push edi
 		push edx
 		push ecx
@@ -183,22 +189,22 @@ main proc
 		push eax
 		push OFFSET formato_datos_empresa
 		call printf
-		add esp, 24                          ; Limpiar stack
-		inc esi                               ; Incrementar el índice de factura y de mes
-		cmp esi, n_facturas                   ; Comparar el índice con la cantidad de facturas
-		jl imprimir_datos                     ; Saltar a imprimir_datos si el índice es menor que la cantidad de facturas
+		add esp, 24                          		; Limpiar stack
+		inc esi                               		; Incrementar el índice de factura y de mes
+		cmp esi, n_facturas                   		; Comparar el índice con la cantidad de facturas
+		jl imprimir_datos                     		; Saltar a imprimir_datos si el índice es menor que la cantidad de facturas
 
 	;|| MONTO ||
 	mostrar_monto:
-		mov eax, monto_anual               ; Cargar el valor de monto_anual en eax
-		mov ebx, val_comparacion           ; Cargar el valor de val_comparacion en ebx
-		push eax
-		push OFFSET formato_monto          ; Imprimir el monto anual
-		call printf
-		add esp, 8                         ; Limpiar stack
-		cmp eax, ebx                       ; Comparar el valor en eax (monto_anual) con 150000
-		jg mensaje2                        ; Si monto_anual > 150000, saltar a la etiqueta mensaje2
-		jl mensaje1                        ; Si monto_anual < 150000, saltar a la etiqueta mensaje1
+		mov eax, monto_anual               			; Cargar el valor de monto_anual en eax
+		mov ebx, val_comparacion           			; Cargar el valor de val_comparacion en ebx
+		push eax			
+		push OFFSET formato_monto          			; Imprimir el monto anual
+		call printf			
+		add esp, 8                         			; Limpiar stack
+		cmp eax, ebx                       			; Comparar el valor en eax (monto_anual) con 150000
+		jg mensaje2                        			; Si monto_anual > 150000, saltar a la etiqueta mensaje2
+		jl mensaje1                        			; Si monto_anual < 150000, saltar a la etiqueta mensaje1
 
 	;|| AVISO 1 ||
 	mensaje1:
