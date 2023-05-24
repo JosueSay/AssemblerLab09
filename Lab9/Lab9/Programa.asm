@@ -194,30 +194,35 @@ main proc
 		cmp esi, n_facturas                   		; Comparar el índice con la cantidad de facturas
 		jl imprimir_datos                     		; Saltar a imprimir_datos si el índice es menor que la cantidad de facturas
 
-	;|| MONTO ||
+
+		;|| MONTO ||
 	mostrar_monto:
-		mov eax, monto_anual               			; Cargar el valor de monto_anual en eax
-		mov ebx, val_comparacion           			; Cargar el valor de val_comparacion en ebx
-		push eax			
+        mov eax, monto_anual               		; Cargar el valor de monto_anual en eax
+        push eax			
 		push OFFSET formato_monto          			; Imprimir el monto anual
 		call printf			
 		add esp, 8                         			; Limpiar stack
-		cmp eax, ebx                       			; Comparar el valor en eax (monto_anual) con 150000
-		jg mensaje2                        			; Si monto_anual > 150000, saltar a la etiqueta mensaje2
-		jl mensaje1                        			; Si monto_anual < 150000, saltar a la etiqueta mensaje1
+	
+	;|| MONTO ||
+    mostrar_aviso:
+        mov eax, monto_anual               		; Cargar el valor de monto_anual en eax
+        mov ebx, val_comparacion           		; Cargar el valor de val_comparacion en ebx
+        cmp eax, ebx                       		; Comparar el valor en eax (monto_anual) con 150000
+        jg mensaje1                        		; Si monto_anual > 150000, saltar a la etiqueta mensaje1
+        jmp mensaje2                        		; Si monto_anual <= 150000, saltar a la etiqueta mensaje2
 
-	;|| AVISO 1 ||
-	mensaje1:
-		push OFFSET aviso1
-		call printf
-		add esp, 4
-		jmp finalizar
+    ;|| AVISO 1 ||
+    mensaje1:
+        push OFFSET aviso1
+        call printf
+        add esp, 4
+        jmp finalizar
 
-	;|| AVISO 2 ||
-	mensaje2:
-		push OFFSET aviso2
-		call printf
-		add esp, 4
+    ;|| AVISO 2 ||
+    mensaje2:
+        push OFFSET aviso2
+        call printf
+        add esp, 4
 
 	finalizar:
 	call exit
